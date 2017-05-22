@@ -4,24 +4,27 @@
 
 $:.unshift(File.join(File.dirname(__FILE__), '..', '..', '..', 'ext'))
 require 'java'
-require 'iText-4.2.0.jar'
+require 'itext5-itextpdf-5.5.11.jar'
 
 java_import 'java.io.FileOutputStream'
 java_import 'java.io.ByteArrayOutputStream'
-java_import 'com.lowagie.text.pdf.AcroFields'
-java_import 'com.lowagie.text.pdf.PdfReader'
-java_import 'com.lowagie.text.pdf.PdfStamper'
-java_import 'com.lowagie.text.Image'
-java_import 'com.lowagie.text.Rectangle'
-java_import 'com.lowagie.text.pdf.GrayColor'
+java_import 'com.itextpdf.text.pdf.AcroFields'
+java_import 'com.itextpdf.text.pdf.PdfReader'
+java_import 'com.itextpdf.text.pdf.PdfStamper'
+java_import 'com.itextpdf.text.Image'
+java_import 'com.itextpdf.text.Rectangle'
+java_import 'com.itextpdf.text.pdf.GrayColor'
+java_import 'com.itextpdf.text.BaseColor'
 
 module PDF
-  include_package 'com.lowagie.text.pdf'
+  include_package 'com.itextpdf.text.pdf'
 
   class Stamper
     def initialize(pdf = nil)
       template(pdf) if ! pdf.nil?
     end
+
+    BLACK = BaseColor::BLACK
   
     def template(template)
       # NOTE I'd rather use a ByteArrayOutputStream.  However I

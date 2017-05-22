@@ -143,6 +143,44 @@ module PDF
       @canvas.rectangle(x, y, width, height)
     end
 
+    # Generate a Datamatrix barcode and stamp it over the specified form field.
+    #
+    # @param form_field [String] The name of the PDF form field where the
+    #   barcode will be drawn.
+    # @param value [String] The value of the Datamatrix barcode.
+    # @optional height [Integer] The number of 'rows' in the barcode.
+    # @optional width [Integer] The number of 'columns' in the barcode.
+    # @optional page [Integer] The number of the page (1 indexed) that contains
+    #   the form field.
+    # @optional module_height [Numeric] Set the module height
+    # @optional module_width [Numeric] Set the module width
+    #
+    # @example Add a datamatrix barcode to a PDF over the form_field_name form field:
+    #   pdf.datamatrix('form_field_name', 'your text here', height: 16, width: 48)
+    def datamatrix(form_field, value, opts = {})
+      bar = create_barcode('Datamatrix')
+      bar.set_height(opts.fetch(:height, 0))
+      bar.set_width(opts.fetch(:width, 0))
+      bar.generate(value)
+      bar_image = bar.create_image # only used to set the containing template size
+
+      coords = @form.getFieldPositions(form_field.to_s)
+      rect = coords[0].position
+
+      # BarcodeDatamatrix#getImage returns an image that is unpleasantly
+      # rasterized by some PDF viewers. Using BarcodeDatamatrix#place_barcode
+      # ensures a clearly legible Datamatrix barcode, but requires jumping
+      # through a template hoop. PDF417 does not exhibit this quality
+      # degredation.
+      stamp_content = @stamp.get_over_content(opts.fetch(:page, 1))
+      template = stamp_content.create_template(bar_image.width, bar_image.height)
+      bar.place_barcode(template, BLACK, opts.fetch(:module_height, 1), opts.fetch(:module_width, 1))
+      image = Image.get_instance(template)
+      image.set_absolute_position(rect.left, rect.bottom)
+      image.scale_to_fit(rect)
+      stamp_content.add_image(image, false)
+    end
+
     # Example
     # barcode("PDF417", "2d_barcode", "Barcode data...", AspectRatio: 0.5)
     def barcode(format, key, value, opts = {})
