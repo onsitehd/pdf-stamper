@@ -9,11 +9,7 @@ require 'fileutils'
 
 include FileUtils
 
-if RUBY_PLATFORM =~ /java/ # ifdef to check if your using JRuby
-  require 'pdf/stamper/jruby'
-else
-  require 'pdf/stamper/rjb'
-end
+require 'pdf/stamper/jruby'
 
 module PDF
   class Stamper
