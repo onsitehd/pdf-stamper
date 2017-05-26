@@ -15,4 +15,12 @@ describe PDF::Stamper do
     File.exist?('test_output.pdf').should be true
     File.delete('test_output.pdf')
   end
+
+  it 'should generate PDF417 barcodes' do
+    pdf = PDF::Stamper.new(File.join(File.dirname(__FILE__), 'test_template.pdf'))
+    pdf.barcode('PDF417', :text_field01, 'this is a barcode')
+    pdf.save_as('barcode_output.pdf')
+    File.exist?('barcode_output.pdf').should be true
+    File.delete('barcode_output.pdf')
+  end
 end
