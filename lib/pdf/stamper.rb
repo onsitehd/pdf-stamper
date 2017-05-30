@@ -176,28 +176,22 @@ module PDF
       stamp_content.add_image(image, false)
     end
 
-    # Example
-    # barcode("PDF417", "2d_barcode", "Barcode data...", AspectRatio: 0.5)
+    # @example Add a PDF417 barcode:
+    #
+    #   barcode("PDF417", "2d_barcode", "Barcode data...", AspectRatio: 0.5)
     def barcode(format, key, value, opts = {})
       bar = create_barcode(format)
       bar.setText(value)
       opts.each do |name, opt|
-        #bar.send("set#{name.to_s.camelize}", opt) #Camelize is not present outside of Rails by default
         bar.send("set#{name.to_s}", opt)
       end
-
       coords = @form.getFieldPositions(key.to_s)
-      rect = create_rectangle(coords)
-
-      barcode_img = bar.getImage
-      barcode_img.scalePercent(100, 100 * bar.getYHeight)
-      barcode_img.setAbsolutePosition(
-          coords[1] + (rect.getWidth - barcode_img.getScaledWidth) / 2,
-          coords[2] + (rect.getHeight - barcode_img.getScaledHeight) / 2
-      )
-
-      cb = @stamp.getOverContent(coords[0].to_i)
-      cb.addImage(barcode_img)
+      rect = coords[0].position
+      barcode_img = bar.get_image
+      barcode_img.scale_to_fit(rect)
+      barcode_img.set_absolute_position(rect.left, rect.bottom)
+      cb = @stamp.get_over_content(opts.fetch(:page, 1))
+      cb.add_image(barcode_img)
     end
 
     # this has to be called *before* setting field values

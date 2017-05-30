@@ -64,10 +64,6 @@ module PDF
       PDF.const_get("Barcode#{format}").new
     end
 
-    def create_rectangle(coords)
-      Rectangle.new(coords[1], coords[2], coords[3], coords[4])
-    end
-
     def create_font(font_name)
       BaseFont.createFont(font_name, BaseFont.CP1252, false)
     end
