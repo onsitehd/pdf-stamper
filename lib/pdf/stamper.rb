@@ -52,21 +52,16 @@ module PDF
     end
   
     # Set a button field defined by key and replaces with an image.
-    def image(key, image_path)
+    def image(key, image_path, options = {})
       # Idea from here http://itext.ugent.be/library/question.php?id=31 
       # Thanks Bruno for letting me know about it.
-      img = Image.getInstance(image_path)
-      img_field = @form.getFieldPositions(key.to_s)
-
-      rect = Rectangle.new(img_field[1], img_field[2], img_field[3], img_field[4])
-      img.scaleToFit(rect.width, rect.height)
-      img.setAbsolutePosition(
-        img_field[1] + (rect.width - img.scaledWidth) / 2,
-        img_field[2] + (rect.height - img.scaledHeight) /2
-      )
-
-      cb = @stamp.getOverContent(img_field[0].to_i)
-      cb.addImage(img)
+      img = Image.get_instance(image_path)
+      coords = @form.get_field_positions(key.to_s)
+      rect = coords[0].position
+      img.set_absolute_position(rect.left, rect.bottom)
+      img.scale_to_fit(rect)
+      image_content = @stamp.get_over_content(options.fetch(:page, 1))
+      image_content.add_image(img)
     end
     
     # PDF::Stamper allows setting metadata on the created PDF by passing
