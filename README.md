@@ -51,12 +51,19 @@ Here is how you use it in Rails.
 
   git clone http://github.com/jaywhy/pdf-stamper/
 
+## Testing
+
+```sh
+bundle exec rspec
+```
+
 ## Contributors
 
 Paul Schreiber
 Joe Steele
 Ronny Hanssen
 Marshall Anschutz
+Aaron Breckenridge
 
 ## License
 

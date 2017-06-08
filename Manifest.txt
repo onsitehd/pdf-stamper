@@ -4,7 +4,6 @@ README.md
 Rakefile
 ext/iText-4.2.0.jar
 lib/pdf/stamper.rb
-lib/pdf/stamper/rjb.rb
 spec/logo.gif
 spec/pdf_stamper_spec.rb
 spec/test_template.pdf
