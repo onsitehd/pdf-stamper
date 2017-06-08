@@ -52,21 +52,16 @@ module PDF
     end
   
     # Set a button field defined by key and replaces with an image.
-    def image(key, image_path)
+    def image(key, image_path, options = {})
       # Idea from here http://itext.ugent.be/library/question.php?id=31 
       # Thanks Bruno for letting me know about it.
-      img = Image.getInstance(image_path)
-      img_field = @form.getFieldPositions(key.to_s)
-
-      rect = Rectangle.new(img_field[1], img_field[2], img_field[3], img_field[4])
-      img.scaleToFit(rect.width, rect.height)
-      img.setAbsolutePosition(
-        img_field[1] + (rect.width - img.scaledWidth) / 2,
-        img_field[2] + (rect.height - img.scaledHeight) /2
-      )
-
-      cb = @stamp.getOverContent(img_field[0].to_i)
-      cb.addImage(img)
+      img = Image.get_instance(image_path)
+      coords = @form.get_field_positions(key.to_s)
+      rect = coords[0].position
+      img.set_absolute_position(rect.left, rect.bottom)
+      img.scale_to_fit(rect)
+      image_content = @stamp.get_over_content(options.fetch(:page, 1))
+      image_content.add_image(img)
     end
     
     # PDF::Stamper allows setting metadata on the created PDF by passing
@@ -143,28 +138,60 @@ module PDF
       @canvas.rectangle(x, y, width, height)
     end
 
-    # Example
-    # barcode("PDF417", "2d_barcode", "Barcode data...", AspectRatio: 0.5)
+    # Generate a Datamatrix barcode and stamp it over the specified form field.
+    #
+    # @param form_field [String] The name of the PDF form field where the
+    #   barcode will be drawn.
+    # @param value [String] The value of the Datamatrix barcode.
+    # @optional height [Integer] The number of 'rows' in the barcode.
+    # @optional width [Integer] The number of 'columns' in the barcode.
+    # @optional page [Integer] The number of the page (1 indexed) that contains
+    #   the form field.
+    # @optional module_height [Numeric] Set the module height
+    # @optional module_width [Numeric] Set the module width
+    #
+    # @example Add a datamatrix barcode to a PDF over the form_field_name form field:
+    #   pdf.datamatrix('form_field_name', 'your text here', height: 16, width: 48)
+    def datamatrix(form_field, value, opts = {})
+      bar = create_barcode('Datamatrix')
+      bar.set_height(opts.fetch(:height, 0))
+      bar.set_width(opts.fetch(:width, 0))
+      bar.generate(value)
+      bar_image = bar.create_image # only used to set the containing template size
+
+      coords = @form.getFieldPositions(form_field.to_s)
+      rect = coords[0].position
+
+      # BarcodeDatamatrix#getImage returns an image that is unpleasantly
+      # rasterized by some PDF viewers. Using BarcodeDatamatrix#place_barcode
+      # ensures a clearly legible Datamatrix barcode, but requires jumping
+      # through a template hoop. PDF417 does not exhibit this quality
+      # degredation.
+      stamp_content = @stamp.get_over_content(opts.fetch(:page, 1))
+      template = stamp_content.create_template(bar_image.width, bar_image.height)
+      bar.place_barcode(template, BLACK, opts.fetch(:module_height, 1), opts.fetch(:module_width, 1))
+      image = Image.get_instance(template)
+      image.set_absolute_position(rect.left, rect.bottom)
+      image.scale_to_fit(rect)
+      stamp_content.add_image(image, false)
+    end
+
+    # @example Add a PDF417 barcode:
+    #
+    #   barcode("PDF417", "2d_barcode", "Barcode data...", AspectRatio: 0.5)
     def barcode(format, key, value, opts = {})
       bar = create_barcode(format)
       bar.setText(value)
       opts.each do |name, opt|
-        #bar.send("set#{name.to_s.camelize}", opt) #Camelize is not present outside of Rails by default
         bar.send("set#{name.to_s}", opt)
       end
-
       coords = @form.getFieldPositions(key.to_s)
-      rect = create_rectangle(coords)
-
-      barcode_img = bar.getImage
-      barcode_img.scalePercent(100, 100 * bar.getYHeight)
-      barcode_img.setAbsolutePosition(
-          coords[1] + (rect.getWidth - barcode_img.getScaledWidth) / 2,
-          coords[2] + (rect.getHeight - barcode_img.getScaledHeight) / 2
-      )
-
-      cb = @stamp.getOverContent(coords[0].to_i)
-      cb.addImage(barcode_img)
+      rect = coords[0].position
+      barcode_img = bar.get_image
+      barcode_img.scale_to_fit(rect)
+      barcode_img.set_absolute_position(rect.left, rect.bottom)
+      cb = @stamp.get_over_content(opts.fetch(:page, 1))
+      cb.add_image(barcode_img)
     end
 
     # this has to be called *before* setting field values
