@@ -156,6 +156,7 @@ module PDF
       bar_image = bar.create_image # only used to set the containing template size
 
       coords = @form.getFieldPositions(form_field.to_s)
+      return unless coords
       rect = coords[0].position
 
       # BarcodeDatamatrix#getImage returns an image that is unpleasantly
@@ -182,6 +183,7 @@ module PDF
         bar.send("set#{name.to_s}", opt)
       end
       coords = @form.getFieldPositions(key.to_s)
+      return unless coords
       rect = coords[0].position
       barcode_img = bar.get_image
       barcode_img.scale_to_fit(rect)
