@@ -23,4 +23,9 @@ describe PDF::Stamper do
     File.exist?('barcode_output.pdf').should be true
     File.delete('barcode_output.pdf')
   end
+
+  it 'should ignore datamatrix for invalid fieldnames' do
+    pdf = PDF::Stamper.new(File.join(File.dirname(__FILE__), 'test_template.pdf'))
+    pdf.datamatrix('this field does not exist', 'this is a barcode')
+  end
 end
