@@ -141,8 +141,6 @@ module PDF
     # @param value [String] The value of the Datamatrix barcode.
     # @optional height [Integer] The number of 'rows' in the barcode.
     # @optional width [Integer] The number of 'columns' in the barcode.
-    # @optional page [Integer] The number of the page (1 indexed) that contains
-    #   the form field.
     # @optional module_height [Numeric] Set the module height
     # @optional module_width [Numeric] Set the module width
     #
@@ -157,20 +155,21 @@ module PDF
 
       coords = @form.getFieldPositions(form_field.to_s)
       return unless coords
-      rect = coords[0].position
-
-      # BarcodeDatamatrix#getImage returns an image that is unpleasantly
-      # rasterized by some PDF viewers. Using BarcodeDatamatrix#place_barcode
-      # ensures a clearly legible Datamatrix barcode, but requires jumping
-      # through a template hoop. PDF417 does not exhibit this quality
-      # degredation.
-      stamp_content = @stamp.get_over_content(opts.fetch(:page, 1))
-      template = stamp_content.create_template(bar_image.width, bar_image.height)
-      bar.place_barcode(template, BLACK, opts.fetch(:module_height, 1), opts.fetch(:module_width, 1))
-      image = Image.get_instance(template)
-      image.set_absolute_position(rect.left, rect.bottom)
-      image.scale_to_fit(rect)
-      stamp_content.add_image(image, false)
+      coords.each do |coord|
+        rect = coord.position
+        # BarcodeDatamatrix#getImage returns an image that is unpleasantly
+        # rasterized by some PDF viewers. Using BarcodeDatamatrix#place_barcode
+        # ensures a clearly legible Datamatrix barcode, but requires jumping
+        # through a template hoop. PDF417 does not exhibit this quality
+        # degredation.
+        stamp_content = @stamp.get_over_content(opts.fetch(:page, coord.page))
+        template = stamp_content.create_template(bar_image.width, bar_image.height)
+        bar.place_barcode(template, BLACK, opts.fetch(:module_height, 1), opts.fetch(:module_width, 1))
+        image = Image.get_instance(template)
+        image.set_absolute_position(rect.left, rect.bottom)
+        image.scale_to_fit(rect)
+        stamp_content.add_image(image, false)
+      end
     end
 
     # @example Add a PDF417 barcode:
@@ -184,12 +183,14 @@ module PDF
       end
       coords = @form.getFieldPositions(key.to_s)
       return unless coords
-      rect = coords[0].position
-      barcode_img = bar.get_image
-      barcode_img.scale_to_fit(rect)
-      barcode_img.set_absolute_position(rect.left, rect.bottom)
-      cb = @stamp.get_over_content(opts.fetch(:page, 1))
-      cb.add_image(barcode_img)
+      coords.each do |coord|
+        rect = coord.position
+        barcode_img = bar.get_image
+        barcode_img.scale_to_fit(rect)
+        barcode_img.set_absolute_position(rect.left, rect.bottom)
+        cb = @stamp.get_over_content(opts.fetch(:page, coord.page))
+        cb.add_image(barcode_img)
+      end
     end
 
     # this has to be called *before* setting field values
