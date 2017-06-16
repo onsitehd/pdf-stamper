@@ -28,12 +28,4 @@ describe PDF::Stamper do
     pdf = PDF::Stamper.new(File.join(File.dirname(__FILE__), 'test_template.pdf'))
     pdf.datamatrix('this field does not exist', 'this is a barcode')
   end
-
-  it 'should stamp any pages in the document' do
-    pdf = PDF::Stamper.new(File.join(File.dirname(__FILE__), 'multipage_fields.pdf'))
-    pdf.datamatrix('APPOINTMENT_DATA', 'Hello, world!')
-    pdf.save_as('datamatrix_output.pdf')
-    File.exist?('datamatrix_output.pdf').should be true
-    File.delete('datamatrix_output.pdf')
-  end
 end
