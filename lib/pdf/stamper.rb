@@ -40,9 +40,9 @@ module PDF
     end
   
     def template(template)
-      reader = PdfReader.new(template)
+      @reader = PdfReader.new(template)
       @baos = ByteArrayOutputStream.new
-      @stamp = PdfStamper.new(reader, @baos)
+      @stamp = PdfStamper.new(@reader, @baos)
       @form = @stamp.getAcroFields()
       @canvas = @stamp.getOverContent(1)
     end
@@ -214,6 +214,7 @@ module PDF
       @canvas.stroke()
       @stamp.setFormFlattening(true)
       @stamp.close
+      @reader.close
     end
   end
 end
